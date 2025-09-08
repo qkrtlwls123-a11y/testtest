@@ -1,0 +1,36 @@
+// lib/supabaseAdmin.ts
+import { createClient } from '@supabase/supabase-js';
+
+export const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } }
+);
+// lib/tokens.ts
+import crypto from 'crypto';
+export const genToken = (len = 32) =>
+  crypto.randomBytes(len).toString('base64url');
+// lib/mailer.ts (Resend 예시)
+import { Resend } from 'resend';
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export async function sendMail(to: string, subject: string, html: string) {
+  await resend.emails.send({
+    from: process.env.FROM_EMAIL!,
+    to,
+    subject,
+    html,
+  });
+}
+// lib/csv.ts
+export async function parseCsv(file: File): Promise<Array<Record<string,string>>> {
+  const text = await file.text();
+  const [headerLine, ...lines] = text.split(/\r?\n/).filter(Boolean);
+  const headers = headerLine.split(',').map(h => h.trim());
+  return lines.map(line => {
+    const cols = line.split(',').map(c => c.trim());
+    const row: Record<string, string> = {};
+    headers.forEach((h,i)=> row[h] = cols[i] ?? '');
+    return row;
+  });
+}
