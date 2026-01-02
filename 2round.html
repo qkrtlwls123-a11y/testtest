@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2030 Vision Puzzle</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #e0e0e0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* 인쇄 전용 스타일 */
+        @media print {
+            body { background: white; }
+            .no-print { display: none !important; }
+            .page-break { page-break-after: always; }
+            .container { box-shadow: none !important; margin: 0 !important; border: none !important; }
+        }
+
+        .container {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            margin: 20px auto;
+            padding: 10mm;
+            overflow: hidden;
+            box-sizing: border-box;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        /* --- 1. 문제지 (The Sheet) --- */
+        #scatter-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            height: 100%;
+            padding: 20px 0;
+        }
+
+        /* 일련번호 세트 (한 줄) */
+        .serial-set {
+            display: flex;
+            gap: 10px; /* 칸 사이 간격 */
+            padding: 10px;
+            transform-origin: center;
+            /* 배경 제거 */
+        }
+
+        /* 개별 네모칸 */
+        .serial-box {
+            width: 50px;  /* 사이즈 확대 */
+            height: 60px; /* 사이즈 확대 */
+            border: 2px solid #333; /* 테두리 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Black Ops One', sans-serif; /* 가독성 좋은 숫자/영문 폰트 */
+            font-size: 32px; /* 글자 크기 확대 */
+            font-weight: 500; /* Medium ~ SemiBold */
+            position: relative;
+            background: transparent; /* 배경색 제거 */
+            overflow: hidden;
+        }
+
+        /* 노이즈 텍스트 (방해물) */
+        .noise {
+            position: absolute;
+            font-size: 14px;
+            font-weight: 300;
+            z-index: 0;
+            opacity: 0.9;
+            user-select: none;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: center;
+            line-height: 10px;
+        }
+        
+        .target-char {
+            z-index: 1;
+            position: relative;
+        }
+
+        /* --- 2. 카드 디자인 --- */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10mm;
+            margin-top: 10mm;
+        }
+
+        .card {
+            border: 1px solid #000;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            box-sizing: border-box;
+            position: relative;
+            background: white;
+        }
+
+        /* 타이틀 카드 전용 스타일 */
+        .title-card-header {
+            background-color: #000;
+            color: #fff;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: center;
+            margin: -15px -15px 10px -15px; /* 카드 상단에 붙이기 */
+        }
+        
+        .title-main {
+            font-size: 18px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .qr-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0px;
+            margin-top: auto;
+        }
+        
+        .qr-img {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #ddd;
+        }
+
+
+
+        /* 내용 카드 전용 스타일 */
+        .content-text {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            margin: auto 0;
+            word-break: keep-all;
+            line-height: 1.5;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="no-print" style="text-align: center; padding: 15px; background: #333; color: white; position: sticky; top: 0; z-index: 999;">
+        <span style="margin-right: 20px;">🎲 새로고침(F5)하면 정답 위치와 일련번호가 랜덤으로 바뀝니다.</span>
+        <button onclick="window.print()" style="padding: 8px 20px; font-size: 16px; cursor: pointer; font-weight: bold;">🖨️ 인쇄하기</button>
+    </div>
+
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="font-family: 'Black Ops One'; font-size: 48px; margin: 0;">DATA RECOVERY</h1>
+            <p style="margin: 5px 0; font-size: 12px; color: #555;">SECURITY LEVEL: TOP SECRET / [2030 PROJECT]</p>
+        </div>
+        
+        <div id="scatter-area">
+            </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="container">
+        <div class="card-grid" id="title-cards-area">
+            </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="container">
+        <div class="card-grid" id="content-cards-area">
+            </div>
+    </div>
+
+    <script>
+        /*
+            [게임 로직 설계]
+            1. 총 6개의 컬럼(네모칸 위치 1~6).
+            2. 각 컬럼마다 '정답'이 숨겨진 행(Row)이 단 하나 존재함.
+               예: 1번째 숫자는 3번 줄에, 2번째 숫자는 8번 줄에... (분산 배치)
+            3. 정답 칸 조건:
+               - 방해물(Noise) 색상 = 카드 테두리(조명) 색상
+               - 글자(Char) 색상 = 내용 카드 힌트 색상
+               -> 해당 조명을 비추면 방해물은 사라지고 글자만 보임.
+            4. 오답 칸 조건:
+               - 절대 '내용 카드 힌트 색상'의 글자를 포함하지 않음 (혼동 방지).
+        */
+
+        const config = {
+            rowCount: 9, // 생성할 일련번호 줄 수
+            colCount: 6   // 한 줄당 칸 수
+        };
+
+        // 색상 정의 (출력용)
+        const C = {
+            red: '#FF0000', green: '#00FF00', blue: '#0000FF',
+            cyan: '#00FFFF', magenta: '#FF00FF', yellow: '#FFD700', // Yellow 가독성 위해 약간 어둡게
+            black: '#000000', purple: '#800080'
+        };
+
+        // 문제 데이터 (순서대로 Box 1~6)
+        // light: 방해물 색 (조명색), targetColor: 정답 글자 색
+        const solutions = [
+            { id: 1, char: 'P', light: 'red',     lightHex: C.red,     targetColor: 'blue',    targetHex: C.blue },
+            { id: 2, char: 'W', light: 'green',   lightHex: C.green,   targetColor: 'magenta', targetHex: C.magenta },
+            { id: 3, char: '5', light: 'blue',    lightHex: C.blue,    targetColor: 'yellow',  targetHex: C.yellow },
+            { id: 4, char: '2', light: 'cyan',    lightHex: C.cyan,    targetColor: 'red',     targetHex: C.red },
+            { id: 5, char: '1', light: 'magenta', lightHex: C.magenta, targetColor: 'green',   targetHex: C.green },
+            { id: 6, char: '6', light: 'yellow',  lightHex: C.yellow,  targetColor: 'purple',  targetHex: C.purple }
+        ];
+
+        // 카드 텍스트 정보
+        const cardInfo = [
+            { id: 1, title: "#1 고객신뢰+ PLUS", desc: "고객신뢰 + PLUS <span style='color:blue'>확대</span>" },
+            { id: 2, title: "#2 AI PIONEER", desc: "디지털 AI 이니셔티브 <span style='color:magenta'>선도</span>" },
+            { id: 3, title: "#3 Global Frontier", desc: "글로벌 금융그룹 <span style='color:#b59a00'>도약</span>" }, // Yellow 텍스트 잘 보이게 조정
+            { id: 4, title: "#4 Core Value-up", desc: "초일류 보험 경쟁력 <span style='color:red'>확보</span>" },
+            { id: 5, title: "#5 Investment Excellence", desc: "자산운용 안정성·수익성 <span style='color:green'>제고</span>" },
+            { id: 6, title: "#6 Growth-Profit Balance", desc: "성장과 이익의 선순환 기반 <span style='color:purple'>마련</span>" }
+        ];
+
+        // QR 링크 (단색 이미지)
+        const qrLinks = {
+            'red': 'https://dummyimage.com/600x600/ff0000/ff0000.png',
+            'green': 'https://dummyimage.com/600x600/00ff00/00ff00.png',
+            'blue': 'https://dummyimage.com/600x600/0000ff/0000ff.png',
+            'cyan': 'https://dummyimage.com/600x600/00ffff/00ffff.png',
+            'magenta': 'https://dummyimage.com/600x600/ff00ff/ff00ff.png',
+            'yellow': 'https://dummyimage.com/600x600/ffff00/ffff00.png'
+        };
+        const qrApi = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=";
+
+        // 랜덤 문자셋
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const noiseColors = [C.red, C.green, C.blue, C.cyan, C.magenta, C.yellow];
+        const textColors = [C.blue, C.magenta, C.yellow, C.red, C.green, C.purple, C.black];
+
+        function init() {
+            createProblemSheet();
+            createCards();
+        }
+
+        function createProblemSheet() {
+            const container = document.getElementById('scatter-area');
+            
+            // 1. 정답이 들어갈 '행(Row) 번호'를 각 컬럼별로 랜덤 지정
+            // ex) targetRows[0] = 3 -> 1번칸의 정답은 3번째 줄에 있음.
+            let targetRows = [];
+            let availableRows = Array.from({length: config.rowCount}, (_, i) => i);
+            
+            // 셔플 후 앞에서 6개 뽑기 (정답이 겹치지 않게 분산)
+            availableRows.sort(() => Math.random() - 0.5);
+            for(let i=0; i<6; i++) {
+                targetRows[i] = availableRows[i];
+            }
+
+            // 2. 줄(Row) 생성
+            for (let r = 0; r < config.rowCount; r++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'serial-set';
+                
+                // 약간의 회전/이동으로 랜덤성 부여
+                const rot = (Math.random() * 4) - 2; // -2 ~ 2도
+                const tx = (Math.random() * 20) - 10;
+                rowDiv.style.transform = `rotate(${rot}deg) translateX(${tx}px)`;
+
+                // 3. 칸(Box) 생성
+                for (let c = 0; c < config.colCount; c++) {
+                    const box = document.createElement('div');
+                    box.className = 'serial-box';
+
+                    // 이 칸이 정답 칸인가?
+                    const isTarget = (targetRows[c] === r);
+                    const solutionData = solutions[c]; // 현재 컬럼(Box 번호)에 해당하는 정답 데이터
+
+                    if (isTarget) {
+                        // [정답 칸 생성 로직]
+                        // 1. 메인 글자: 정답 문자 / 색상: 타겟 색상
+                        const charSpan = document.createElement('span');
+                        charSpan.innerText = solutionData.char;
+                        charSpan.style.color = solutionData.targetHex;
+                        charSpan.className = 'target-char';
+                        
+                        // 2. 노이즈: 조명 색상 (빛 비추면 사라짐)
+                        const noiseDiv = createNoise(solutionData.lightHex);
+                        
+                        box.appendChild(noiseDiv);
+                        box.appendChild(charSpan);
+                        // 디버그용 (정답 표시는 실제 인쇄시 제거됨)
+                        // box.style.borderColor = "red"; 
+
+                    } else {
+                        // [오답(Decoy) 칸 생성 로직]
+                        // 중요: 오답 칸에는 절대 '정답 색상'을 쓰면 안됨 (혼란 방지)
+                        
+                        // 랜덤 글자
+                        const rndChar = chars.charAt(Math.floor(Math.random() * chars.length));
+                        
+                        // 랜덤 글자 색상 (단, 현재 컬럼의 정답 색상은 제외)
+                        let safeTextColors = textColors.filter(color => color !== solutionData.targetHex);
+                        const rndTextColor = safeTextColors[Math.floor(Math.random() * safeTextColors.length)];
+
+                        // 랜덤 노이즈 색상 (아무거나 상관없음, 다양하게)
+                        const rndNoiseColor = noiseColors[Math.floor(Math.random() * noiseColors.length)];
+
+                        const charSpan = document.createElement('span');
+                        charSpan.innerText = rndChar;
+                        charSpan.style.color = rndTextColor;
+                        charSpan.className = 'target-char';
+
+                        const noiseDiv = createNoise(rndNoiseColor);
+
+                        box.appendChild(noiseDiv);
+                        box.appendChild(charSpan);
+                    }
+                    rowDiv.appendChild(box);
+                }
+                container.appendChild(rowDiv);
+            }
+        }
+
+        function createNoise(color) {
+            const div = document.createElement('div');
+            div.className = 'noise';
+            div.style.color = color;
+            
+            // 작은 글자들로 노이즈 생성
+            let noiseText = "";
+            const junk = "!@#$%^&*()_+~QWERTYUIOP{}|";
+            for(let i=0; i<15; i++) {
+                const char = junk.charAt(Math.floor(Math.random() * junk.length));
+                const span = document.createElement('span');
+                span.innerText = char;
+                span.style.transform = `rotate(${Math.random()*360}deg)`;
+                span.style.margin = '1px';
+                div.appendChild(span);
+            }
+            return div;
+        }
+
+        function createCards() {
+            const tContainer = document.getElementById('title-cards-area');
+            const cContainer = document.getElementById('content-cards-area');
+
+            // 타이틀 카드 생성
+            cardInfo.forEach((info, idx) => {
+                const sol = solutions[idx];
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="title-card-header">2030 핵심과제</div>
+                    <div class="title-main">${info.title}</div>
+                    <div class="qr-section">
+                        <img class="qr-img" src="${qrApi}${encodeURIComponent(qrLinks[sol.light])}" />
+                        <div>
+                        </div>
+                    </div>
+                `;
+                tContainer.appendChild(card);
+            });
+
+            // 내용 카드 생성 (랜덤 셔플)
+            let shuffledInfo = [...cardInfo].sort(() => Math.random() - 0.5);
+            shuffledInfo.forEach(info => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="content-text">${info.desc}</div>
+                `;
+                cContainer.appendChild(card);
+            });
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
